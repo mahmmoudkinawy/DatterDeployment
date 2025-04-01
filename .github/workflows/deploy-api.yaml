@@ -14,6 +14,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Build Angular App
+        run: |
+          cd client
+          npm install
+          npm run build --prod
+
+      - name: Copy Angular build to wwwroot
+        run: |
+          cp -r client/dist/* API/wwwroot/
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
