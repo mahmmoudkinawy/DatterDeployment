@@ -1,9 +1,7 @@
 ﻿using API.Data;
 using API.Entities;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace API.Extensions;
 
@@ -24,34 +22,48 @@ public static class IdentityServiceExtensions
             .AddEntityFrameworkStores<DataContext>();
 
         services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                var tokenKey = config["TokenKey"] ?? throw new Exception("TokenKey not found");
-                options.TokenValidationParameters = new TokenValidationParameters
+            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                options =>
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
+                    options.LoginPath = "/api/auth/login";
+                    options.AccessDeniedPath = "/api/auth/forbidden";
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Strict;
+                }
+            );
 
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
-                    {
-                        var accessToken = context.Request.Query["access_token"];
+        //services
+        //    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        //    .AddJwtBearer(options =>
+        //    {
+        //        var tokenKey = config["TokenKey"] ?? throw new Exception("TokenKey not found");
+        //        options.TokenValidationParameters = new TokenValidationParameters
+        //        {
+        //            ValidateIssuerSigningKey = true,
+        //            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey)),
+        //            ValidateIssuer = false,
+        //            ValidateAudience = false
+        //        };
 
-                        var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                        {
-                            context.Token = accessToken;
-                        }
+        //        options.Events = new JwtBearerEvents
+        //        {
+        //            OnMessageReceived = context =>
+        //            {
+        //                var accessToken = context.Request.Query["access_token"];
 
-                        return Task.CompletedTask;
-                    }
-                };
-            });
+        //                var path = context.HttpContext.Request.Path;
+        //                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+        //                {
+        //                    context.Token = accessToken;
+        //                }
+
+        //                return Task.CompletedTask;
+        //            }
+        //        };
+        //    });
 
         services
             .AddAuthorizationBuilder()
