@@ -20,8 +20,10 @@ app.UseCors(x =>
     x.AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials()
-        .WithOrigins("http://localhost:4200", "https://localhost:4200")
+        .WithOrigins("http://localhost:4200", "https://localhost:4200", "http://144.91.75.57")
 );
+
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -29,6 +31,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<PresenceHub>("hubs/presence");
 app.MapHub<MessageHub>("hubs/message");
+app.MapFallbackToFile("index.html");
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
