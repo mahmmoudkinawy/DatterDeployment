@@ -30,8 +30,6 @@ public static class IdentityServiceExtensions
                     options.LoginPath = "/api/auth/login";
                     options.AccessDeniedPath = "/api/auth/forbidden";
                     options.Cookie.HttpOnly = true;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                    options.Cookie.SameSite = SameSiteMode.Strict;
                 }
             );
 
