@@ -1,0 +1,39 @@
+name: Deploy to SERVER
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          cd API
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/datingapp:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/datingapp:latest
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/datingapp:latest
+            docker stop datingapp || true
+            docker rm datingapp || true
+            docker run -d -p 2003:8080 --name datingapp ${{ secrets.DOCKERHUB_USERNAME }}/datingapp:latest
